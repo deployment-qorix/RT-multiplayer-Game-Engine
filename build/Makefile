@@ -143,17 +143,17 @@ client/fast:
 .PHONY : client/fast
 
 #=============================================================================
-# Target rules for targets named client3D
+# Target rules for targets named client3d
 
 # Build rule for target.
-client3D: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 client3D
-.PHONY : client3D
+client3d: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 client3d
+.PHONY : client3d
 
 # fast build rule for target.
-client3D/fast:
-	$(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/build
-.PHONY : client3D/fast
+client3d/fast:
+	$(MAKE) $(MAKESILENT) -f client3d/CMakeFiles/client3d.dir/build.make client3d/CMakeFiles/client3d.dir/build
+.PHONY : client3d/fast
 
 # Help Target
 help:
@@ -164,7 +164,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... client"
-	@echo "... client3D"
+	@echo "... client3d"
 	@echo "... server"
 .PHONY : help
 

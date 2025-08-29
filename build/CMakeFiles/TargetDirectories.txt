@@ -6,6 +6,6 @@
 /home/l-100809/Game Engine/build/client/CMakeFiles/client.dir
 /home/l-100809/Game Engine/build/client/CMakeFiles/edit_cache.dir
 /home/l-100809/Game Engine/build/client/CMakeFiles/rebuild_cache.dir
-/home/l-100809/Game Engine/build/client3D/CMakeFiles/client3D.dir
-/home/l-100809/Game Engine/build/client3D/CMakeFiles/edit_cache.dir
-/home/l-100809/Game Engine/build/client3D/CMakeFiles/rebuild_cache.dir
+/home/l-100809/Game Engine/build/client3d/CMakeFiles/client3d.dir
+/home/l-100809/Game Engine/build/client3d/CMakeFiles/edit_cache.dir
+/home/l-100809/Game Engine/build/client3d/CMakeFiles/rebuild_cache.dir

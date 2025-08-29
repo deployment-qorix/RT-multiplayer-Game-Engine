@@ -18,4 +18,4 @@ find_package(glfw3 3.3 REQUIRED)
 # --- Add All Game Subdirectories ---
 add_subdirectory(server)
 add_subdirectory(client)
-add_subdirectory(client3D)
+add_subdirectory(client3d)

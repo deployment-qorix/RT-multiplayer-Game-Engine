@@ -117,49 +117,49 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-client3D/CMakeFiles/client3D.dir/rule:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 client3D/CMakeFiles/client3D.dir/rule
-.PHONY : client3D/CMakeFiles/client3D.dir/rule
+client3D/CMakeFiles/client3d.dir/rule:
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 client3D/CMakeFiles/client3d.dir/rule
+.PHONY : client3D/CMakeFiles/client3d.dir/rule
 
 # Convenience name for target.
-client3D: client3D/CMakeFiles/client3D.dir/rule
-.PHONY : client3D
+client3d: client3D/CMakeFiles/client3d.dir/rule
+.PHONY : client3d
 
 # fast build rule for target.
-client3D/fast:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/build
-.PHONY : client3D/fast
+client3d/fast:
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3d.dir/build.make client3D/CMakeFiles/client3d.dir/build
+.PHONY : client3d/fast
 
-__/vendor/glad/src/glad.o: __/vendor/glad/src/glad.c.o
-.PHONY : __/vendor/glad/src/glad.o
+NetworkClient.o: NetworkClient.cpp.o
+.PHONY : NetworkClient.o
 
 # target to build an object file
-__/vendor/glad/src/glad.c.o:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.o
-.PHONY : __/vendor/glad/src/glad.c.o
+NetworkClient.cpp.o:
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3d.dir/build.make client3D/CMakeFiles/client3d.dir/NetworkClient.cpp.o
+.PHONY : NetworkClient.cpp.o
 
-__/vendor/glad/src/glad.i: __/vendor/glad/src/glad.c.i
-.PHONY : __/vendor/glad/src/glad.i
+NetworkClient.i: NetworkClient.cpp.i
+.PHONY : NetworkClient.i
 
 # target to preprocess a source file
-__/vendor/glad/src/glad.c.i:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.i
-.PHONY : __/vendor/glad/src/glad.c.i
+NetworkClient.cpp.i:
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3d.dir/build.make client3D/CMakeFiles/client3d.dir/NetworkClient.cpp.i
+.PHONY : NetworkClient.cpp.i
 
-__/vendor/glad/src/glad.s: __/vendor/glad/src/glad.c.s
-.PHONY : __/vendor/glad/src/glad.s
+NetworkClient.s: NetworkClient.cpp.s
+.PHONY : NetworkClient.s
 
 # target to generate assembly for a file
-__/vendor/glad/src/glad.c.s:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.s
-.PHONY : __/vendor/glad/src/glad.c.s
+NetworkClient.cpp.s:
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3d.dir/build.make client3D/CMakeFiles/client3d.dir/NetworkClient.cpp.s
+.PHONY : NetworkClient.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
 
 # target to build an object file
 main.cpp.o:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/main.cpp.o
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3d.dir/build.make client3D/CMakeFiles/client3d.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -167,7 +167,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/main.cpp.i
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3d.dir/build.make client3D/CMakeFiles/client3d.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -175,7 +175,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3D.dir/build.make client3D/CMakeFiles/client3D.dir/main.cpp.s
+	cd "/home/l-100809/Game Engine/build" && $(MAKE) $(MAKESILENT) -f client3D/CMakeFiles/client3d.dir/build.make client3D/CMakeFiles/client3d.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 # Help Target
@@ -186,10 +186,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... client3D"
-	@echo "... __/vendor/glad/src/glad.o"
-	@echo "... __/vendor/glad/src/glad.i"
-	@echo "... __/vendor/glad/src/glad.s"
+	@echo "... client3d"
+	@echo "... NetworkClient.o"
+	@echo "... NetworkClient.i"
+	@echo "... NetworkClient.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

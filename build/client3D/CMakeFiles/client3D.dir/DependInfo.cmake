@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/l-100809/Game Engine/vendor/glad/src/glad.c" "client3D/CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.o" "gcc" "client3D/CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.o.d"
+  "/home/l-100809/Game Engine/client3D/NetworkClient.cpp" "client3D/CMakeFiles/client3D.dir/NetworkClient.cpp.o" "gcc" "client3D/CMakeFiles/client3D.dir/NetworkClient.cpp.o.d"
   "/home/l-100809/Game Engine/client3D/main.cpp" "client3D/CMakeFiles/client3D.dir/main.cpp.o" "gcc" "client3D/CMakeFiles/client3D.dir/main.cpp.o.d"
   )
 

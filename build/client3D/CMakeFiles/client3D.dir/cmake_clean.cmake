@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/client3D.dir/NetworkClient.cpp.o"
+  "CMakeFiles/client3D.dir/NetworkClient.cpp.o.d"
   "CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.o"
   "CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.o.d"
   "CMakeFiles/client3D.dir/main.cpp.o"

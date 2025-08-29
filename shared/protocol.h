@@ -1,82 +1,84 @@
 #pragma once
-
 #include <cstdint>
 
-// A constant for the maximum number of ghosts in the game.
-const int MAX_GHOSTS = 4;
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
-// Defines the overall state of the game.
+const int MAX_PLAYERS = 16;
+const int MAX_CHAT_MESSAGE_LENGTH = 128; // NEW
+
 enum class GameState : uint8_t {
-    START_SCREEN,
-    PLAYING,
-    GAME_OVER,
-    YOU_WIN
+    LOBBY,
+    IN_PROGRESS,
+    GAME_OVER
 };
 
-// Defines the different types of messages that can be sent between the client and server.
 enum class MessageType : uint8_t {
-    PlayerInput,      // Client->Server: A player's movement input.
-    GameStateUpdate,  // Server->Client: A change in the global game state.
-    PlayerSpawn,      // Server->Client: A player has appeared in the game.
-    PlayerPosition,   // Server->Client: An update on a player's position and status.
-    PlayerDespawn,    // Server->Client: A player has been removed from the game.
-    UpdateScore,      // Server->Client: A player's score has changed.
-    PelletCollected,  // Server->Client: A pellet has been eaten and should be removed.
-    GhostUpdate       // Server->Client: A snapshot of all ghost positions.
+    PlayerJoin,
+    PlayerLeave,
+    PlayerState,
+    PlayerInput,
+    PlayerShoot,
+    ProjectileSpawn,
+    GameStateUpdate,
+    ClientReady,
+    ChatMessage // NEW: For sending chat messages
 };
 
-// Data for a GameStateUpdate message.
+struct PlayerStateData {
+    uint32_t id;
+    glm::vec3 position;
+    glm::quat rotation;
+    glm::vec3 box_min;
+    glm::vec3 box_max;
+    int health;
+    int kills;
+    int deaths;
+    bool is_ready;
+};
+
 struct GameStateData {
     GameState state;
+    uint32_t winner_id;
 };
 
-// Data for PlayerSpawn, PlayerPosition, and UpdateScore messages.
-struct PlayerData {
+// NEW: Data for a chat message
+struct ChatMessageData {
     uint32_t player_id;
-    int x;
-    int y;
-    int score;
-    int lives;
+    char text[MAX_CHAT_MESSAGE_LENGTH];
 };
 
-// Data for a PelletCollected message.
-struct PelletData {
-    int x;
-    int y;
-};
-
-// Data for a single ghost.
-struct GhostData {
-    uint32_t id;
-    int x;
-    int y;
-};
-
-// A snapshot of all ghosts for the GhostUpdate message.
-struct AllGhostsData {
+struct AllPlayersStateData {
     uint8_t count;
-    GhostData ghosts[MAX_GHOSTS];
+    PlayerStateData players[MAX_PLAYERS];
 };
 
-// Data for a PlayerInput message.
 struct PlayerInputData {
-    bool up = false;
-    bool down = false;
-    bool left = false;
-    bool right = false;
+    bool up, down, left, right;
+    glm::quat rotation;
 };
 
-// The main message structure that is sent over the network.
-// It contains the message type and a union of all possible data payloads.
+struct PlayerShootData {};
+struct ClientReadyData {};
+
+struct ProjectileData {
+    glm::vec3 start_position;
+    glm::vec3 direction;
+};
+
 struct GameMessage {
-    GameMessage() : data{} {} // Default constructor to initialize the union
+    GameMessage() : data{} {}
     MessageType type;
     union {
-        GameStateData   game_state_data;
-        PlayerData      player_data;
-        uint32_t        id_to_destroy;
-        PelletData      pellet_data;
-        AllGhostsData   all_ghosts_data;
-        PlayerInputData input_data;
+        PlayerStateData      player_join_data;
+        uint32_t             player_leave_id;
+        AllPlayersStateData  all_players_state_data;
+        PlayerInputData      player_input_data;
+        PlayerShootData      player_shoot_data;
+        ProjectileData       projectile_spawn_data;
+        GameStateData        game_state_data;
+        ClientReadyData      client_ready_data;
+        ChatMessageData      chat_message_data; // NEW
     } data;
 };
+

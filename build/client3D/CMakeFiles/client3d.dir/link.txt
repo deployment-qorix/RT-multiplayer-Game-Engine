@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/client3d.dir/main.cpp.o CMakeFiles/client3d.dir/NetworkClient.cpp.o -o client3d  /usr/lib/x86_64-linux-gnu/libOpenGL.so /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libGLU.so /usr/lib/x86_64-linux-gnu/libboost_system.so.1.83.0 -lassimp 

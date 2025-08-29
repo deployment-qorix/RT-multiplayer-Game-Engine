@@ -54,7 +54,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/l-100809/Game Engine/build/client3D/cmake_install.cmake")
+  include("/home/l-100809/Game Engine/build/client3d/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
