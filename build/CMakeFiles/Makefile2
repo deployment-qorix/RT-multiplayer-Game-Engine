@@ -63,145 +63,127 @@ CMAKE_BINARY_DIR = "/home/l-100809/Game Engine/build"
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: server/all
-all: client/all
-all: client3d/all
+all: CMakeFiles/glad.dir/all
+all: CMakeFiles/imgui.dir/all
+all: CMakeFiles/client.dir/all
+all: CMakeFiles/server.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
-preinstall: server/preinstall
-preinstall: client/preinstall
-preinstall: client3d/preinstall
+preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: server/clean
-clean: client/clean
-clean: client3d/clean
+clean: CMakeFiles/glad.dir/clean
+clean: CMakeFiles/imgui.dir/clean
+clean: CMakeFiles/client.dir/clean
+clean: CMakeFiles/server.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Directory level rules for directory client
-
-# Recursive "all" directory target.
-client/all: client/CMakeFiles/client.dir/all
-.PHONY : client/all
-
-# Recursive "preinstall" directory target.
-client/preinstall:
-.PHONY : client/preinstall
-
-# Recursive "clean" directory target.
-client/clean: client/CMakeFiles/client.dir/clean
-.PHONY : client/clean
-
-#=============================================================================
-# Directory level rules for directory client3d
-
-# Recursive "all" directory target.
-client3d/all: client3d/CMakeFiles/client3d.dir/all
-.PHONY : client3d/all
-
-# Recursive "preinstall" directory target.
-client3d/preinstall:
-.PHONY : client3d/preinstall
-
-# Recursive "clean" directory target.
-client3d/clean: client3d/CMakeFiles/client3d.dir/clean
-.PHONY : client3d/clean
-
-#=============================================================================
-# Directory level rules for directory server
-
-# Recursive "all" directory target.
-server/all: server/CMakeFiles/server.dir/all
-.PHONY : server/all
-
-# Recursive "preinstall" directory target.
-server/preinstall:
-.PHONY : server/preinstall
-
-# Recursive "clean" directory target.
-server/clean: server/CMakeFiles/server.dir/clean
-.PHONY : server/clean
-
-#=============================================================================
-# Target rules for target server/CMakeFiles/server.dir
+# Target rules for target CMakeFiles/glad.dir
 
 # All Build rule for target.
-server/CMakeFiles/server.dir/all:
-	$(MAKE) $(MAKESILENT) -f server/CMakeFiles/server.dir/build.make server/CMakeFiles/server.dir/depend
-	$(MAKE) $(MAKESILENT) -f server/CMakeFiles/server.dir/build.make server/CMakeFiles/server.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/l-100809/Game Engine/build/CMakeFiles" --progress-num=21,22 "Built target server"
-.PHONY : server/CMakeFiles/server.dir/all
+CMakeFiles/glad.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/l-100809/Game Engine/build/CMakeFiles" --progress-num=4,5 "Built target glad"
+.PHONY : CMakeFiles/glad.dir/all
 
 # Build rule for subdir invocation for target.
-server/CMakeFiles/server.dir/rule: cmake_check_build_system
+CMakeFiles/glad.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 server/CMakeFiles/server.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/glad.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 0
-.PHONY : server/CMakeFiles/server.dir/rule
+.PHONY : CMakeFiles/glad.dir/rule
 
 # Convenience name for target.
-server: server/CMakeFiles/server.dir/rule
-.PHONY : server
+glad: CMakeFiles/glad.dir/rule
+.PHONY : glad
 
 # clean rule for target.
-server/CMakeFiles/server.dir/clean:
-	$(MAKE) $(MAKESILENT) -f server/CMakeFiles/server.dir/build.make server/CMakeFiles/server.dir/clean
-.PHONY : server/CMakeFiles/server.dir/clean
+CMakeFiles/glad.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/clean
+.PHONY : CMakeFiles/glad.dir/clean
 
 #=============================================================================
-# Target rules for target client/CMakeFiles/client.dir
+# Target rules for target CMakeFiles/imgui.dir
 
 # All Build rule for target.
-client/CMakeFiles/client.dir/all:
-	$(MAKE) $(MAKESILENT) -f client/CMakeFiles/client.dir/build.make client/CMakeFiles/client.dir/depend
-	$(MAKE) $(MAKESILENT) -f client/CMakeFiles/client.dir/build.make client/CMakeFiles/client.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/l-100809/Game Engine/build/CMakeFiles" --progress-num=1,2,3,4,5,6,7,8,9,10 "Built target client"
-.PHONY : client/CMakeFiles/client.dir/all
+CMakeFiles/imgui.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/l-100809/Game Engine/build/CMakeFiles" --progress-num=6,7,8,9,10,11,12,13 "Built target imgui"
+.PHONY : CMakeFiles/imgui.dir/all
 
 # Build rule for subdir invocation for target.
-client/CMakeFiles/client.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 10
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 client/CMakeFiles/client.dir/all
+CMakeFiles/imgui.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 8
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/imgui.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 0
-.PHONY : client/CMakeFiles/client.dir/rule
+.PHONY : CMakeFiles/imgui.dir/rule
 
 # Convenience name for target.
-client: client/CMakeFiles/client.dir/rule
+imgui: CMakeFiles/imgui.dir/rule
+.PHONY : imgui
+
+# clean rule for target.
+CMakeFiles/imgui.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/clean
+.PHONY : CMakeFiles/imgui.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/client.dir
+
+# All Build rule for target.
+CMakeFiles/client.dir/all: CMakeFiles/glad.dir/all
+CMakeFiles/client.dir/all: CMakeFiles/imgui.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/l-100809/Game Engine/build/CMakeFiles" --progress-num=1,2,3 "Built target client"
+.PHONY : CMakeFiles/client.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/client.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/client.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 0
+.PHONY : CMakeFiles/client.dir/rule
+
+# Convenience name for target.
+client: CMakeFiles/client.dir/rule
 .PHONY : client
 
 # clean rule for target.
-client/CMakeFiles/client.dir/clean:
-	$(MAKE) $(MAKESILENT) -f client/CMakeFiles/client.dir/build.make client/CMakeFiles/client.dir/clean
-.PHONY : client/CMakeFiles/client.dir/clean
+CMakeFiles/client.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/clean
+.PHONY : CMakeFiles/client.dir/clean
 
 #=============================================================================
-# Target rules for target client3d/CMakeFiles/client3d.dir
+# Target rules for target CMakeFiles/server.dir
 
 # All Build rule for target.
-client3d/CMakeFiles/client3d.dir/all:
-	$(MAKE) $(MAKESILENT) -f client3d/CMakeFiles/client3d.dir/build.make client3d/CMakeFiles/client3d.dir/depend
-	$(MAKE) $(MAKESILENT) -f client3d/CMakeFiles/client3d.dir/build.make client3d/CMakeFiles/client3d.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/l-100809/Game Engine/build/CMakeFiles" --progress-num=11,12,13,14,15,16,17,18,19,20 "Built target client3d"
-.PHONY : client3d/CMakeFiles/client3d.dir/all
+CMakeFiles/server.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir="/home/l-100809/Game Engine/build/CMakeFiles" --progress-num=14,15,16 "Built target server"
+.PHONY : CMakeFiles/server.dir/all
 
 # Build rule for subdir invocation for target.
-client3d/CMakeFiles/client3d.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 10
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 client3d/CMakeFiles/client3d.dir/all
+CMakeFiles/server.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 3
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/server.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/l-100809/Game Engine/build/CMakeFiles" 0
-.PHONY : client3d/CMakeFiles/client3d.dir/rule
+.PHONY : CMakeFiles/server.dir/rule
 
 # Convenience name for target.
-client3d: client3d/CMakeFiles/client3d.dir/rule
-.PHONY : client3d
+server: CMakeFiles/server.dir/rule
+.PHONY : server
 
 # clean rule for target.
-client3d/CMakeFiles/client3d.dir/clean:
-	$(MAKE) $(MAKESILENT) -f client3d/CMakeFiles/client3d.dir/build.make client3d/CMakeFiles/client3d.dir/clean
-.PHONY : client3d/CMakeFiles/client3d.dir/clean
+CMakeFiles/server.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/clean
+.PHONY : CMakeFiles/server.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

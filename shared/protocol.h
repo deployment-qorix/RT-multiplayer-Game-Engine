@@ -1,11 +1,34 @@
 #pragma once
 #include <cstdint>
-
+#include <cstring>
+#include <vector>
+#include <stdexcept>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-const int MAX_PLAYERS = 16;
-const int MAX_CHAT_MESSAGE_LENGTH = 128; // NEW
+constexpr int MAX_PLAYERS = 16;
+constexpr int MAX_CHAT_MESSAGE_LENGTH = 128;
+constexpr int TCP_PORT = 1337;
+constexpr int UDP_PORT = 1338;
+constexpr int GAME_VERSION = 1;
+
+// ---------------- Message Types ----------------
+enum class MessageType : uint8_t {
+    Handshake,
+    HandshakeResult,
+    PlayerJoin,
+    PlayerLeave,
+    PlayerState,
+    AllPlayersState,
+    PlayerInput,
+    PlayerShoot,
+    ProjectileSpawn,
+    PlayerHit,
+    PlayerRespawn,
+    GameStateUpdate,
+    ClientReady,
+    ChatMessage
+};
 
 enum class GameState : uint8_t {
     LOBBY,
@@ -13,16 +36,22 @@ enum class GameState : uint8_t {
     GAME_OVER
 };
 
-enum class MessageType : uint8_t {
-    PlayerJoin,
-    PlayerLeave,
-    PlayerState,
-    PlayerInput,
-    PlayerShoot,
-    ProjectileSpawn,
-    GameStateUpdate,
-    ClientReady,
-    ChatMessage // NEW: For sending chat messages
+// ---------------- Data Structures ----------------
+struct HandshakeData {
+    uint32_t version;
+};
+
+struct HandshakeResultData {
+    bool success;
+    char message[MAX_CHAT_MESSAGE_LENGTH];
+};
+
+struct PlayerInputData {
+    bool up = false;
+    bool down = false;
+    bool left = false;
+    bool right = false;
+    glm::quat rotation = glm::quat(1, 0, 0, 0);
 };
 
 struct PlayerStateData {
@@ -37,48 +66,80 @@ struct PlayerStateData {
     bool is_ready;
 };
 
-struct GameStateData {
-    GameState state;
-    uint32_t winner_id;
-};
-
-// NEW: Data for a chat message
-struct ChatMessageData {
-    uint32_t player_id;
-    char text[MAX_CHAT_MESSAGE_LENGTH];
-};
-
 struct AllPlayersStateData {
-    uint8_t count;
+    int count;
     PlayerStateData players[MAX_PLAYERS];
 };
-
-struct PlayerInputData {
-    bool up, down, left, right;
-    glm::quat rotation;
-};
-
-struct PlayerShootData {};
-struct ClientReadyData {};
 
 struct ProjectileData {
     glm::vec3 start_position;
     glm::vec3 direction;
 };
 
-struct GameMessage {
-    GameMessage() : data{} {}
-    MessageType type;
-    union {
-        PlayerStateData      player_join_data;
-        uint32_t             player_leave_id;
-        AllPlayersStateData  all_players_state_data;
-        PlayerInputData      player_input_data;
-        PlayerShootData      player_shoot_data;
-        ProjectileData       projectile_spawn_data;
-        GameStateData        game_state_data;
-        ClientReadyData      client_ready_data;
-        ChatMessageData      chat_message_data; // NEW
-    } data;
+struct PlayerHitData {
+    uint32_t victim_id;
+    uint32_t attacker_id;
+    int new_health;
 };
 
+struct PlayerRespawnData {
+    uint32_t player_id;
+    glm::vec3 position;
+};
+
+struct GameStateData {
+    GameState state;
+    uint32_t winner_id;
+};
+
+struct ClientReadyData { };
+
+struct ChatMessageData {
+    uint32_t player_id;
+    char text[MAX_CHAT_MESSAGE_LENGTH];
+};
+
+struct PlayerShootData { };
+
+// ---------------- GameMessage Wrapper ----------------
+struct GameMessage {
+    MessageType type;
+    char data[2048]; // increased buffer size
+
+    // ---- Generic Set / Get helpers ----
+    template<typename T>
+    void setData(const T& d) {
+        static_assert(sizeof(T) <= sizeof(data), "Data too large for GameMessage::data");
+        std::memcpy(data, &d, sizeof(T));
+    }
+
+    template<typename T>
+    T getData() const {
+        T d;
+        std::memcpy(&d, data, sizeof(T));
+        return d;
+    }
+
+    // ---- Serialize to raw buffer ----
+    std::vector<char> serialize() const {
+        std::vector<char> buffer(sizeof(MessageType) + sizeof(data));
+        std::memcpy(buffer.data(), &type, sizeof(MessageType));
+        std::memcpy(buffer.data() + sizeof(MessageType), data, sizeof(data));
+        return buffer;
+    }
+
+    // ---- Deserialize from raw buffer ----
+    static GameMessage deserialize(const char* buffer) {
+        GameMessage msg;
+        std::memcpy(&msg.type, buffer, sizeof(MessageType));
+        std::memcpy(msg.data, buffer + sizeof(MessageType), sizeof(msg.data));
+        return msg;
+    }
+};
+
+// ---------------- UDP Message ----------------
+struct UDPMessage {
+    uint32_t player_id;
+    glm::vec3 position;
+    glm::quat rotation;
+};

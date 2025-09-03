@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/client.dir/client3d/main.cpp.o CMakeFiles/client.dir/client3d/NetworkClient.cpp.o -o client  libglad.a libimgui.a /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 -ldl /usr/lib/x86_64-linux-gnu/libboost_system.so.1.83.0 /usr/lib/x86_64-linux-gnu/libsfml-audio.so.2.6.1 /usr/lib/x86_64-linux-gnu/libsfml-system.so.2.6.1 

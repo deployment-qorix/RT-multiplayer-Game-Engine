@@ -1,389 +1,616 @@
-#include "../shared/protocol.h"
-#include <iostream>
-#include <memory>
-#include <map>
-#include <mutex>
-#include <chrono>
+// server.cpp (cleaned)
+// Compatible with your provided protocol.h and client code (main.cpp / NetworkClient.cpp)
+
 #include <boost/asio.hpp>
-#include <glm/gtc/epsilon.hpp>
+#include <iostream>
+#include <unordered_map>
+#include <memory>
+#include <mutex>
+#include <deque>
+#include <chrono>
 #include <random>
 #include <vector>
-#include <set>
+#include <cstring>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+#include "../shared/protocol.h"
 
 using boost::asio::ip::tcp;
+using boost::asio::ip::udp;
 
-class Game;
+// ---------------------- Serialization helpers (must match client) ----------------------
 
-struct AABB {
-    glm::vec3 min;
-    glm::vec3 max;
-};
+static std::vector<char> serialize_game_message(const GameMessage& m) {
+    // Body = 4-byte type + 256 bytes payload
+    std::vector<char> body(sizeof(uint32_t) + sizeof(m.data));
+    uint32_t t = static_cast<uint32_t>(m.type);
+    std::memcpy(body.data(), &t, sizeof(uint32_t));
+    std::memcpy(body.data() + sizeof(uint32_t), &m.data, sizeof(m.data));
+    return body;
+}
 
-struct PlayerState {
-    uint32_t id;
+static GameMessage deserialize_game_message(const std::vector<char>& body) {
+    if (body.size() != sizeof(uint32_t) + 256)
+        throw std::runtime_error("invalid TCP body size");
+    GameMessage m{};
+    uint32_t t = 0;
+    std::memcpy(&t, body.data(), sizeof(uint32_t));
+    m.type = static_cast<MessageType>(t);
+    std::memcpy(&m.data, body.data() + sizeof(uint32_t), 256);
+    return m;
+}
+
+static std::vector<char> serialize_udp_message(const UDPMessage& u) {
+    std::vector<char> buf(sizeof(UDPMessage));
+    std::memcpy(buf.data(), &u, sizeof(UDPMessage));
+    return buf;
+}
+
+static UDPMessage deserialize_udp_message(const char* data, std::size_t len) {
+    if (len != sizeof(UDPMessage)) throw std::runtime_error("invalid UDP size");
+    UDPMessage u{};
+    std::memcpy(&u, data, sizeof(UDPMessage));
+    return u;
+}
+
+// ---------------------- Game data structures ----------------------
+
+struct AABB { glm::vec3 min; glm::vec3 max; };
+
+struct PlayerRuntime {
+    uint32_t id = 0;
     glm::vec3 position{0.0f, 0.0f, 3.0f};
-    glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
-    AABB bounding_box;
+    glm::quat rotation{1, 0, 0, 0};
+    AABB box{};
     int health = 100;
-    std::chrono::steady_clock::time_point death_timestamp;
     int kills = 0;
     int deaths = 0;
-    bool is_ready = false;
+    bool ready = false;
 
-    void update_bounding_box() {
-        glm::vec3 size(0.5f, 1.0f, 0.5f); 
-        bounding_box.min = position - size;
-        bounding_box.max = position + size;
+    std::chrono::steady_clock::time_point death_time{};
+
+    void update_aabb() {
+        // Match your client’s debug bbox ~ 1x2x1 around center
+        glm::vec3 half(0.5f, 1.0f, 0.5f);
+        box.min = position - half;
+        box.max = position + half;
     }
 };
+
+// Forward declarations
+class Game;
+class Session;
+
+// ---------------------- Session: one TCP client ----------------------
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
-    Session(tcp::socket socket, Game& game);
+    Session(tcp::socket socket, Game& game) : socket_(std::move(socket)), game_(game) {}
+
     void start();
-    void deliver(const GameMessage& msg);
-    uint32_t get_player_id() const { return player_id_; }
+    void deliver(const GameMessage& msg); // thread-safe: called from Game under lock
+
+    uint32_t id() const { return id_; }
+    void set_id(uint32_t v) { id_ = v; }
+
 private:
-    void do_read();
+    void read_header();
+    void read_body(std::size_t body_len);
+    void write_next();
+
     tcp::socket socket_;
     Game& game_;
-    GameMessage read_msg_;
-    uint32_t player_id_;
-    static uint32_t next_player_id_;
+
+    // TCP length-prefixed header (4 bytes)
+    enum { header_len = sizeof(uint32_t) };
+    std::array<char, header_len> header_buf_{};
+    std::vector<char> body_buf_;
+
+    std::deque<std::vector<char>> write_q_;
+    uint32_t id_ = 0;
 };
-uint32_t Session::next_player_id_ = 1;
+
+// ---------------------- Game core ----------------------
 
 class Game {
 public:
-    Game();
-    void join(std::shared_ptr<Session> participant);
-    void leave(std::shared_ptr<Session> participant);
-    void process_message(const GameMessage& msg, uint32_t sender_id);
-    void update();
+    explicit Game(boost::asio::io_context& io)
+        : io_(io),
+          acceptor_(io, tcp::endpoint(tcp::v4(), TCP_PORT)),
+          udp_socket_(io, udp::endpoint(udp::v4(), UDP_PORT)),
+          tick_(io, std::chrono::milliseconds(16)),
+          rng_(std::random_device{}()),
+          spawn_rng_(-10, 10) {
+        // Simple world colliders like your client scene
+        colliders_.push_back({{ -20.f, -1.5f, -20.f }, { 20.f, -0.5f, 20.f }}); // "ground slab"
+        colliders_.push_back({{ -5.f, -0.5f, -5.f },  { -3.f,  1.5f, -3.f }});   // red box
+        colliders_.push_back({{  3.f, -0.5f,  4.f },  {  5.f,  1.5f,  6.f }});   // blue box
+
+        do_accept();
+        do_receive_udp();
+        tick_loop();
+    }
+
+    // Session lifecycle
+    void join(const std::shared_ptr<Session>& s);
+    void leave(const std::shared_ptr<Session>& s);
+
+    // Incoming gameplay messages
+    void handle_msg(uint32_t sender_id, const GameMessage& msg);
+
+    // UDP send helper
+    void send_udp_to(uint32_t player_id, const UDPMessage& m);
+
 private:
-    void startGame();
-    void resetMatch();
-    bool CheckCollision(const AABB& a, const AABB& b);
+    // Loop
+    void tick_loop();
+
+    // Networking
+    void do_accept();
+    void do_receive_udp();
+
+    // Broadcasts (caller must hold lock)
     void broadcast(const GameMessage& msg);
-    std::map<uint32_t, std::shared_ptr<Session>> sessions_;
-    std::map<uint32_t, PlayerState> player_states_;
-    std::mutex mutex_;
-    const float PLAYER_SPEED = 0.1f;
-    const int RESPAWN_DELAY_SECONDS = 5;
-    const int KILLS_TO_WIN = 5;
-    const int MATCH_RESTART_DELAY_SECONDS = 10;
+    void send_to(uint32_t id, const GameMessage& msg);
 
-    GameState game_state_ = GameState::LOBBY;
-    std::chrono::steady_clock::time_point match_over_timestamp_;
+    // Game helpers
+    bool aabb_overlap(const AABB& a, const AABB& b) const;
+    void start_match();
+    void reset_match();
 
-    std::mt19937 random_generator_;
-    std::uniform_int_distribution<int> spawn_distribution_;
-    
-    std::vector<AABB> static_colliders_;
+private:
+    boost::asio::io_context& io_;
+    tcp::acceptor acceptor_;
+    udp::socket udp_socket_;
+    udp::endpoint udp_remote_;
+    std::array<char, 1024> udp_buf_{};
+
+    boost::asio::steady_timer tick_;
+
+    std::mutex mtx_;
+    std::unordered_map<uint32_t, std::shared_ptr<Session>> sessions_;
+    std::unordered_map<uint32_t, PlayerRuntime> players_;
+    std::unordered_map<uint32_t, udp::endpoint> udp_eps_;
+
+    GameState state_ = GameState::LOBBY;
+    uint32_t next_id_ = 1;
+    std::chrono::steady_clock::time_point gameover_time_{};
+
+    // World
+    std::vector<AABB> colliders_;
+
+    // RNG for spawn points
+    std::mt19937 rng_;
+    std::uniform_int_distribution<int> spawn_rng_;
 };
 
-Game::Game() : spawn_distribution_(-10, 10) {
-    std::random_device rd;
-    random_generator_.seed(rd());
+// ====================== Session implementation ======================
 
-    static_colliders_.push_back({{-20.0f, -1.5f, -20.0f}, {20.0f, -0.5f, 20.0f}});
-    static_colliders_.push_back({{-5.0f, -0.5f, -5.0f}, {-3.0f, 1.5f, -3.0f}});
-    static_colliders_.push_back({{3.0f, -0.5f, 4.0f}, {5.0f, 1.5f, 6.0f}});
-    static_colliders_.push_back({{-2.0f, -0.5f, 8.0f}, {2.0f, 0.5f, 9.0f}});
-}
+void Session::start() { read_header(); }
 
-Session::Session(tcp::socket socket, Game& game) : socket_(std::move(socket)), game_(game) {
-    player_id_ = next_player_id_++;
-}
-void Session::start() { game_.join(shared_from_this()); do_read(); }
 void Session::deliver(const GameMessage& msg) {
-    boost::asio::async_write(socket_, boost::asio::buffer(&msg, sizeof(GameMessage)),
-        [self = shared_from_this()](boost::system::error_code ec, std::size_t) {
-            if (ec) { self->game_.leave(self); }
-        });
+    auto body = serialize_game_message(msg);
+
+    bool writing = !write_q_.empty();
+    write_q_.push_back(std::move(body));
+    if (!writing) write_next();
 }
-void Session::do_read() {
-    auto self(shared_from_this());
-    boost::asio::async_read(socket_, boost::asio::buffer(&read_msg_, sizeof(GameMessage)),
-        [this, self](boost::system::error_code ec, std::size_t) {
-            if (!ec) {
-                game_.process_message(read_msg_, self->get_player_id());
-                do_read();
-            } else {
+
+void Session::read_header() {
+    auto self = shared_from_this();
+    boost::asio::async_read(
+        socket_,
+        boost::asio::buffer(header_buf_.data(), header_len),
+        [this, self](boost::system::error_code ec, std::size_t /*n*/) {
+            if (ec) { game_.leave(self); return; }
+            uint32_t body_len = 0;
+            std::memcpy(&body_len, header_buf_.data(), sizeof(uint32_t));
+            if (body_len == 0 || body_len > 4096) { game_.leave(self); return; }
+            body_buf_.resize(body_len);
+            read_body(body_len);
+        }
+    );
+}
+
+void Session::read_body(std::size_t body_len) {
+    auto self = shared_from_this();
+    boost::asio::async_read(
+        socket_,
+        boost::asio::buffer(body_buf_.data(), body_len),
+        [this, self](boost::system::error_code ec, std::size_t /*n*/) {
+            if (ec) { game_.leave(self); return; }
+            try {
+                GameMessage m = deserialize_game_message(body_buf_);
+                game_.handle_msg(id_, m);
+            } catch (...) {
+                // bad packet, drop client
                 game_.leave(self);
+                return;
             }
-        });
+            read_header();
+        }
+    );
 }
 
-void Game::startGame(){
-    std::cout << "--- ALL PLAYERS READY! STARTING GAME --- \n";
-    game_state_ = GameState::IN_PROGRESS;
-    resetMatch();
+void Session::write_next() {
+    if (write_q_.empty()) return;
+
+    // Build [header][body] buffers
+    const auto& body = write_q_.front();
+    uint32_t len = static_cast<uint32_t>(body.size());
+    std::array<char, sizeof(uint32_t)> hdr{};
+    std::memcpy(hdr.data(), &len, sizeof(uint32_t));
+    std::vector<boost::asio::const_buffer> bufs;
+    bufs.emplace_back(boost::asio::buffer(hdr));
+    bufs.emplace_back(boost::asio::buffer(body));
+
+    auto self = shared_from_this();
+    boost::asio::async_write(
+        socket_,
+        bufs,
+        [this, self](boost::system::error_code ec, std::size_t /*n*/) {
+            if (ec) { game_.leave(self); return; }
+            write_q_.pop_front();
+            if (!write_q_.empty()) write_next();
+        }
+    );
 }
 
-void Game::resetMatch(){
-    std::cout << "--- RESETTING MATCH --- \n";
-    for(auto& [id, state] : player_states_){
-        state.health = 100;
-        state.kills = 0;
-        state.deaths = 0;
-        state.position = glm::vec3(spawn_distribution_(random_generator_), 0.0f, spawn_distribution_(random_generator_));
-        state.update_bounding_box();
+// ====================== Game implementation ======================
+
+void Game::do_accept() {
+    acceptor_.async_accept([this](boost::system::error_code ec, tcp::socket sock) {
+        if (!ec) {
+            auto s = std::make_shared<Session>(std::move(sock), *this);
+            {
+                std::lock_guard<std::mutex> lock(mtx_);
+                // Reserve ID; we’ll finalize join() to broadcast
+                s->set_id(next_id_++);
+                sessions_[s->id()] = s;
+            }
+            s->start();
+
+            // Complete join immediately (send PlayerJoin etc.)
+            join(s);
+        }
+        do_accept();
+    });
+}
+
+void Game::join(const std::shared_ptr<Session>& s) {
+    std::lock_guard<std::mutex> lock(mtx_);
+
+    // Create player runtime
+    PlayerRuntime p{};
+    p.id = s->id();
+    p.health = 100;
+    p.kills = 0;
+    p.deaths = 0;
+    p.ready = false;
+    p.position = glm::vec3(static_cast<float>(spawn_rng_(rng_)), 0.0f, static_cast<float>(spawn_rng_(rng_)));
+    p.rotation = glm::quat(1, 0, 0, 0);
+    p.update_aabb();
+    players_[p.id] = p;
+
+    std::cout << "[Server] Player " << p.id << " joined.\n";
+
+    // 1) Tell the joining client about THEMSELVES first (so client sets my_player_id correctly)
+    {
+        GameMessage msg{};
+        msg.type = MessageType::PlayerJoin;
+        PlayerStateData d{ p.id, p.position, p.rotation, p.box.min, p.box.max, p.health, p.kills, p.deaths, p.ready };
+        msg.setData(d);
+        send_to(p.id, msg);
     }
-    game_state_ = GameState::IN_PROGRESS;
 
-    GameMessage reset_msg;
-    reset_msg.type = MessageType::GameStateUpdate;
-    reset_msg.data.game_state_data = {game_state_, 0};
-    broadcast(reset_msg);
+    // 2) Tell the joining client about all other existing players
+    for (const auto& [oid, op] : players_) {
+        if (oid == p.id) continue;
+        GameMessage msg{};
+        msg.type = MessageType::PlayerJoin;
+        PlayerStateData d{ op.id, op.position, op.rotation, op.box.min, op.box.max, op.health, op.kills, op.deaths, op.ready };
+        msg.setData(d);
+        send_to(p.id, msg);
+    }
+
+    // 3) Tell everyone else about the new player
+    {
+        GameMessage msg{};
+        msg.type = MessageType::PlayerJoin;
+        PlayerStateData d{ p.id, p.position, p.rotation, p.box.min, p.box.max, p.health, p.kills, p.deaths, p.ready };
+        msg.setData(d);
+        for (const auto& [sid, sess] : sessions_) {
+            if (sid == p.id) continue;
+            sess->deliver(msg);
+        }
+    }
+
+    // 4) Send current game state to the joining client
+    {
+        GameMessage gs{};
+        gs.type = MessageType::GameStateUpdate;
+        GameStateData gsd{ state_, 0 };
+        gs.setData(gsd);
+        send_to(p.id, gs);
+    }
 }
 
-void Game::update() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (sessions_.empty()) return;
+void Game::leave(const std::shared_ptr<Session>& s) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    const auto pid = s->id();
+    if (!sessions_.erase(pid)) return;
 
-    auto now = std::chrono::steady_clock::now();
+    players_.erase(pid);
+    udp_eps_.erase(pid);
 
-    if (game_state_ == GameState::LOBBY) {
-        if (!player_states_.empty()) {
-            bool all_ready = true;
-            for (const auto& [id, state] : player_states_) {
-                if (!state.is_ready) {
-                    all_ready = false;
+    GameMessage msg{};
+    msg.type = MessageType::PlayerLeave;
+    msg.setData(pid);
+    broadcast(msg);
+
+    std::cout << "[Server] Player " << pid << " left.\n";
+}
+
+void Game::handle_msg(uint32_t sender_id, const GameMessage& msg) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    if (!players_.count(sender_id)) return;
+
+    auto& st = players_.at(sender_id);
+
+    switch (msg.type) {
+        case MessageType::ClientReady: {
+            st.ready = true;
+            std::cout << "[Server] Player " << sender_id << " ready.\n";
+        } break;
+
+        case MessageType::ChatMessage: {
+            // Just relay as-is
+            auto chat = msg.getData<ChatMessageData>();
+            broadcast(msg);
+            std::cout << "[Chat] Player " << chat.player_id << ": " << chat.text << "\n";
+        } break;
+
+        case MessageType::PlayerInput: {
+            if (state_ != GameState::IN_PROGRESS || st.health <= 0) break;
+            auto in = msg.getData<PlayerInputData>();
+            st.rotation = in.rotation;
+
+            // movement
+            glm::vec3 f = st.rotation * glm::vec3(0, 0, -1);
+            glm::vec3 r = st.rotation * glm::vec3(1, 0, 0);
+            glm::vec3 old = st.position;
+
+            constexpr float kStep = 0.1f; // server step per input packet
+            if (in.up)    st.position += f * kStep;
+            if (in.down)  st.position -= f * kStep;
+            if (in.left)  st.position -= r * kStep;
+            if (in.right) st.position += r * kStep;
+
+            st.update_aabb();
+
+            // collide players
+            for (auto& [oid, other] : players_) {
+                if (oid == sender_id || other.health <= 0) continue;
+                if (aabb_overlap(st.box, other.box)) {
+                    st.position = old;
+                    st.update_aabb();
                     break;
                 }
             }
-            if (all_ready) {
-                startGame();
-            }
-        }
-    }
-    else if (game_state_ == GameState::GAME_OVER) {
-        auto time_since_game_over = std::chrono::duration_cast<std::chrono::seconds>(now - match_over_timestamp_).count();
-        if (time_since_game_over >= MATCH_RESTART_DELAY_SECONDS) {
-            game_state_ = GameState::LOBBY;
-            for(auto& pair : player_states_) pair.second.is_ready = false;
-            
-            GameMessage lobby_msg;
-            lobby_msg.type = MessageType::GameStateUpdate;
-            lobby_msg.data.game_state_data = {game_state_, 0};
-            broadcast(lobby_msg);
-        }
-    }
-    else if(game_state_ == GameState::IN_PROGRESS){
-        for (auto& [id, state] : player_states_) {
-            if (state.health <= 0) {
-                auto time_since_death = std::chrono::duration_cast<std::chrono::seconds>(now - state.death_timestamp).count();
-                if (time_since_death >= RESPAWN_DELAY_SECONDS) {
-                    state.health = 100;
-                    state.position = glm::vec3(spawn_distribution_(random_generator_), 0.0f, spawn_distribution_(random_generator_));
-                    state.update_bounding_box();
+            // collide world
+            for (const auto& c : colliders_) {
+                if (aabb_overlap(st.box, c)) {
+                    st.position = old;
+                    st.update_aabb();
+                    break;
                 }
-            } else {
-                 state.position.y -= 0.05f;
-                state.update_bounding_box();
-                for(const auto& collider : static_colliders_){
-                    if(CheckCollision(state.bounding_box, collider)){
-                        state.position.y += 0.05f;
-                        state.update_bounding_box();
-                        break;
+            }
+        } break;
+
+        case MessageType::PlayerShoot: {
+            if (state_ != GameState::IN_PROGRESS || st.health <= 0) break;
+
+            glm::vec3 f = st.rotation * glm::vec3(0, 0, -1);
+
+            // Broadcast projectile spawn (for visuals)
+            {
+                GameMessage proj{};
+                proj.type = MessageType::ProjectileSpawn;
+                ProjectileData pd{ st.position, f };
+                proj.setData(pd);
+                broadcast(proj);
+            }
+
+            // Very simple hitscan: dot and distance check
+            for (auto& [tid, target] : players_) {
+                if (tid == sender_id || target.health <= 0) continue;
+
+                glm::vec3 diff = target.position - st.position;
+                float dist2 = glm::dot(diff, diff);
+                if (dist2 > 50.0f * 50.0f) continue;
+
+                glm::vec3 dir_to_target = glm::normalize(diff);
+                if (glm::dot(f, dir_to_target) > 0.95f) {
+                    target.health -= 25;
+                    GameMessage hit{};
+                    hit.type = MessageType::PlayerHit;
+                    PlayerHitData hd{ tid, target.health };
+                    hit.setData(hd);
+                    broadcast(hit);
+
+                    if (target.health <= 0) {
+                        target.deaths++;
+                        st.kills++;
+                        target.death_time = std::chrono::steady_clock::now();
+
+                        // Win condition: first to 5 kills
+                        if (st.kills >= 5) {
+                            state_ = GameState::GAME_OVER;
+                            gameover_time_ = std::chrono::steady_clock::now();
+                            GameMessage end{};
+                            end.type = MessageType::GameStateUpdate;
+                            GameStateData ed{ state_, sender_id };
+                            end.setData(ed);
+                            broadcast(end);
+                        }
+                    }
+                }
+            }
+        } break;
+
+        default:
+            // ignore unknown/unused here
+            break;
+    }
+}
+
+void Game::tick_loop() {
+    // Game tick @ ~60Hz
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+
+        auto now = std::chrono::steady_clock::now();
+
+        if (state_ == GameState::LOBBY) {
+            if (players_.size() > 1) {
+                bool all_ready = true;
+                for (auto& [id, p] : players_) {
+                    if (!p.ready) { all_ready = false; break; }
+                }
+                if (all_ready) start_match();
+            }
+        } else if (state_ == GameState::GAME_OVER) {
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - gameover_time_).count() >= 10) {
+                state_ = GameState::LOBBY;
+                for (auto& [id, p] : players_) p.ready = false;
+
+                GameMessage gs{};
+                gs.type = MessageType::GameStateUpdate;
+                GameStateData sd{ state_, 0 };
+                gs.setData(sd);
+                broadcast(gs);
+            }
+        } else if (state_ == GameState::IN_PROGRESS) {
+            // Handle respawns
+            for (auto& [id, p] : players_) {
+                if (p.health <= 0) {
+                    if (std::chrono::duration_cast<std::chrono::seconds>(now - p.death_time).count() >= 5) {
+                        p.health = 100;
+                        p.position = glm::vec3(static_cast<float>(spawn_rng_(rng_)), 0.0f,
+                                               static_cast<float>(spawn_rng_(rng_)));
+                        p.update_aabb();
+
+                        GameMessage resp{};
+                        resp.type = MessageType::PlayerRespawn;
+                        PlayerRespawnData rd{ id, p.position };
+                        resp.setData(rd);
+                        broadcast(resp);
                     }
                 }
             }
         }
+
+        // Send periodic PlayerState (All players) over TCP so clients stay in sync even without UDP
+        AllPlayersStateData batch{};
+        batch.count = 0;
+        for (auto& [id, p] : players_) {
+            if (batch.count >= MAX_PLAYERS) break;
+            PlayerStateData d{ p.id, p.position, p.rotation, p.box.min, p.box.max, p.health, p.kills, p.deaths, p.ready };
+            batch.players[batch.count++] = d;
+        }
+        GameMessage ps{};
+        ps.type = MessageType::PlayerState;
+        ps.setData(batch);
+        broadcast(ps);
+
+        // Also stream UDP position/rotation if endpoint registered
+        for (auto& [id, p] : players_) {
+            if (!udp_eps_.count(id)) continue;
+            UDPMessage u{ id, p.position, p.rotation };
+            send_udp_to(id, u);
+        }
     }
 
-    GameMessage state_msg;
-    state_msg.type = MessageType::PlayerState;
-    state_msg.data.all_players_state_data.count = player_states_.size();
-    
-    int i = 0;
-    for (const auto& [id, state] : player_states_) {
-        state_msg.data.all_players_state_data.players[i++] = {state.id, state.position, state.rotation, state.bounding_box.min, state.bounding_box.max, state.health, state.kills, state.deaths, state.is_ready};
-    }
-    broadcast(state_msg);
+    tick_.expires_after(std::chrono::milliseconds(16));
+    tick_.async_wait([this](const boost::system::error_code&) { tick_loop(); });
 }
 
-void Game::join(std::shared_ptr<Session> session) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    uint32_t id = session->get_player_id();
-    sessions_[id] = session;
-    
-    PlayerState new_player;
-    new_player.id = id;
-    new_player.position = glm::vec3(spawn_distribution_(random_generator_), 0.0f, spawn_distribution_(random_generator_));
-    new_player.update_bounding_box();
-    player_states_[id] = new_player;
-    
-    std::cout << "Player " << id << " joined.\n";
-    
-    const auto& new_player_state = player_states_[id];
-    
-    GameMessage spawn_msg;
-    spawn_msg.type = MessageType::PlayerJoin;
-    spawn_msg.data.player_join_data = {id, new_player_state.position, new_player_state.rotation, new_player_state.bounding_box.min, new_player_state.bounding_box.max, new_player_state.health, new_player_state.kills, new_player_state.deaths, new_player_state.is_ready};
-    broadcast(spawn_msg);
-    
-    for (const auto& [other_id, state] : player_states_) {
-        if (id == other_id) continue;
-        GameMessage existing_player_msg;
-        existing_player_msg.type = MessageType::PlayerJoin;
-        existing_player_msg.data.player_join_data = {state.id, state.position, state.rotation, state.bounding_box.min, state.bounding_box.max, state.health, state.kills, state.deaths, state.is_ready};
-        session->deliver(existing_player_msg);
-    }
-
-    GameMessage current_game_state_msg;
-    current_game_state_msg.type = MessageType::GameStateUpdate;
-    current_game_state_msg.data.game_state_data = {game_state_, 0};
-    session->deliver(current_game_state_msg);
+void Game::do_receive_udp() {
+    udp_socket_.async_receive_from(
+        boost::asio::buffer(udp_buf_), udp_remote_,
+        [this](boost::system::error_code ec, std::size_t bytes) {
+            if (!ec) {
+                try {
+                    auto u = deserialize_udp_message(udp_buf_.data(), bytes);
+                    std::lock_guard<std::mutex> lock(mtx_);
+                    // Register/refresh endpoint for this player_id
+                    udp_eps_[u.player_id] = udp_remote_;
+                } catch (...) {
+                    // ignore bad UDP packets
+                }
+            }
+            do_receive_udp();
+        }
+    );
 }
 
-void Game::leave(std::shared_ptr<Session> session) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    uint32_t id = session->get_player_id();
-    sessions_.erase(id);
-    player_states_.erase(id);
-    std::cout << "Player " << id << " left.\n";
-    GameMessage leave_msg;
-    leave_msg.type = MessageType::PlayerLeave;
-    leave_msg.data.player_leave_id = id;
-    broadcast(leave_msg);
+void Game::send_udp_to(uint32_t player_id, const UDPMessage& m) {
+    auto it = udp_eps_.find(player_id);
+    if (it == udp_eps_.end()) return;
+    auto buf = serialize_udp_message(m);
+    udp_socket_.async_send_to(
+        boost::asio::buffer(buf),
+        it->second,
+        [](boost::system::error_code, std::size_t) {});
 }
 
-bool Game::CheckCollision(const AABB& a, const AABB& b) {
+void Game::broadcast(const GameMessage& msg) {
+    for (auto& [id, s] : sessions_) s->deliver(msg);
+}
+
+void Game::send_to(uint32_t id, const GameMessage& msg) {
+    auto it = sessions_.find(id);
+    if (it != sessions_.end()) it->second->deliver(msg);
+}
+
+bool Game::aabb_overlap(const AABB& a, const AABB& b) const {
     return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&
            (a.min.y <= b.max.y && a.max.y >= b.min.y) &&
            (a.min.z <= b.max.z && a.max.z >= b.min.z);
 }
 
-void Game::process_message(const GameMessage& msg, uint32_t sender_id) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (player_states_.find(sender_id) == player_states_.end()) return;
-    
-    if (msg.type == MessageType::ChatMessage) {
-        std::cout << "Player " << sender_id << " says: " << msg.data.chat_message_data.text << "\n";
-        broadcast(msg);
-        return;
-    }
-
-    if (game_state_ == GameState::LOBBY && msg.type == MessageType::ClientReady) {
-        player_states_.at(sender_id).is_ready = true;
-        std::cout << "Player " << sender_id << " is ready.\n";
-        return;
-    }
-
-    if (game_state_ != GameState::IN_PROGRESS) return;
-    if (player_states_.at(sender_id).health <= 0) return;
-
-    if (msg.type == MessageType::PlayerInput) {
-        PlayerState& state = player_states_[sender_id];
-        state.rotation = msg.data.player_input_data.rotation;
-        
-        glm::vec3 original_position = state.position;
-        glm::vec3 forward = state.rotation * glm::vec3(0, 0, -1);
-        glm::vec3 right = state.rotation * glm::vec3(1, 0, 0);
-
-        if (msg.data.player_input_data.up) state.position += forward * PLAYER_SPEED;
-        if (msg.data.player_input_data.down) state.position -= forward * PLAYER_SPEED;
-        if (msg.data.player_input_data.left) state.position -= right * PLAYER_SPEED;
-        if (msg.data.player_input_data.right) state.position += right * PLAYER_SPEED;
-        
-        state.update_bounding_box();
-
-        for (const auto& [other_id, other_state] : player_states_) {
-            if (sender_id == other_id || other_state.health <= 0) continue;
-            if (CheckCollision(state.bounding_box, other_state.bounding_box)) {
-                state.position = original_position;
-                state.update_bounding_box();
-                return;
-            }
-        }
-        
-        for (const auto& collider : static_colliders_){
-             if(CheckCollision(state.bounding_box, collider)){
-                 state.position = original_position;
-                 state.update_bounding_box();
-                 return;
-             }
-        }
-    } 
-    else if (msg.type == MessageType::PlayerShoot) {
-        PlayerState& shooter = player_states_[sender_id];
-        glm::vec3 forward = shooter.rotation * glm::vec3(0, 0, -1);
-
-        GameMessage projectile_msg;
-        projectile_msg.type = MessageType::ProjectileSpawn;
-        projectile_msg.data.projectile_spawn_data = {shooter.position, forward};
-        broadcast(projectile_msg);
-
-        for (auto& [target_id, target_state] : player_states_) {
-            if (sender_id == target_id || target_state.health <= 0) continue;
-            glm::vec3 dir_to_target = glm::normalize(target_state.position - shooter.position);
-            
-            if (glm::dot(forward, dir_to_target) > 0.95f) {
-                if(glm::distance(shooter.position, target_state.position) < 50.0f) {
-                    target_state.health -= 25;
-                    if (target_state.health <= 0) {
-                        target_state.health = 0;
-                        target_state.death_timestamp = std::chrono::steady_clock::now();
-                        target_state.deaths++;
-                        shooter.kills++;
-                        
-                        if(shooter.kills >= KILLS_TO_WIN){
-                            game_state_ = GameState::GAME_OVER;
-                            match_over_timestamp_ = std::chrono::steady_clock::now();
-                            GameMessage end_msg;
-                            end_msg.type = MessageType::GameStateUpdate;
-                            end_msg.data.game_state_data = {game_state_, sender_id};
-                            broadcast(end_msg);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-    }
-}
-void Game::broadcast(const GameMessage& msg) {
-    for (const auto& [id, session] : sessions_) {
-        session->deliver(msg);
-    }
+void Game::start_match() {
+    state_ = GameState::IN_PROGRESS;
+    reset_match();
+    GameMessage gs{};
+    gs.type = MessageType::GameStateUpdate;
+    GameStateData sd{ state_, 0 };
+    gs.setData(sd);
+    broadcast(gs);
+    std::cout << "[Server] Match started.\n";
 }
 
-class Server {
-public:
-    Server(boost::asio::io_context& io_context, short port, Game& game)
-        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)), game_(game), timer_(io_context, std::chrono::milliseconds(16)) {
-        do_accept();
-        run_game_update();
+void Game::reset_match() {
+    for (auto& [id, p] : players_) {
+        p.health = 100;
+        p.kills = 0;
+        p.deaths = 0;
+        p.position = glm::vec3(static_cast<float>(spawn_rng_(rng_)), 0.0f,
+                               static_cast<float>(spawn_rng_(rng_)));
+        p.update_aabb();
     }
-private:
-    void run_game_update() {
-        game_.update();
-        timer_.expires_at(timer_.expiry() + std::chrono::milliseconds(16));
-        timer_.async_wait([this](const boost::system::error_code&){ run_game_update(); });
-    }
-    void do_accept() {
-        acceptor_.async_accept(
-            [this](boost::system::error_code ec, tcp::socket socket) {
-                if (!ec) { std::make_shared<Session>(std::move(socket), game_)->start(); }
-                do_accept();
-            });
-    }
-    tcp::acceptor acceptor_;
-    Game& game_;
-    boost::asio::steady_timer timer_;
-};
+}
 
 int main() {
     try {
-        boost::asio::io_context io_context;
-        Game game;
-        Server server(io_context, 1337, game);
-        io_context.run();
+        boost::asio::io_context io;
+        Game game(io);
+        std::cout << "[Server] Running on TCP " << TCP_PORT << " UDP " << UDP_PORT << "\n";
+        io.run();
     } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::cerr << "Server exception: " << e.what() << "\n";
+        return 1;
     }
-    return 0;
 }
-

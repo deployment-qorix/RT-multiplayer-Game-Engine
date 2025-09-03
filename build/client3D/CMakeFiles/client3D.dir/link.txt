@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/client3D.dir/main.cpp.o CMakeFiles/client3D.dir/NetworkClient.cpp.o CMakeFiles/client3D.dir/__/vendor/glad/src/glad.c.o -o client3D  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 

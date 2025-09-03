@@ -1,11 +1,6 @@
+/home/l-100809/Game Engine/build/CMakeFiles/glad.dir
+/home/l-100809/Game Engine/build/CMakeFiles/imgui.dir
+/home/l-100809/Game Engine/build/CMakeFiles/client.dir
+/home/l-100809/Game Engine/build/CMakeFiles/server.dir
 /home/l-100809/Game Engine/build/CMakeFiles/edit_cache.dir
 /home/l-100809/Game Engine/build/CMakeFiles/rebuild_cache.dir
-/home/l-100809/Game Engine/build/server/CMakeFiles/server.dir
-/home/l-100809/Game Engine/build/server/CMakeFiles/edit_cache.dir
-/home/l-100809/Game Engine/build/server/CMakeFiles/rebuild_cache.dir
-/home/l-100809/Game Engine/build/client/CMakeFiles/client.dir
-/home/l-100809/Game Engine/build/client/CMakeFiles/edit_cache.dir
-/home/l-100809/Game Engine/build/client/CMakeFiles/rebuild_cache.dir
-/home/l-100809/Game Engine/build/client3d/CMakeFiles/client3d.dir
-/home/l-100809/Game Engine/build/client3d/CMakeFiles/edit_cache.dir
-/home/l-100809/Game Engine/build/client3d/CMakeFiles/rebuild_cache.dir

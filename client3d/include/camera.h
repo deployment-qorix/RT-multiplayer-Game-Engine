@@ -59,6 +59,7 @@ public:
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
     glm::mat4 GetViewMatrix() {
+// Requirements: QCSIDM_SRS_015, QCSIDM_SRS_072, QCSIDM_SRS_130, QCSIDM_SRS_147, QCSIDM_SRS_149, QCSIDM_SRS_150, QCSIDM_SRS_151, QCSIDM_SRS_173, QCSIDM_SRS_174, QCSIDM_SRS_177
         return glm::lookAt(Position, Position + Front, Up);
     }
     

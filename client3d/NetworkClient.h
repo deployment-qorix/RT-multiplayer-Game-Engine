@@ -1,41 +1,48 @@
+// client3d/NetworkClient.h
 #pragma once
-
 #include <boost/asio.hpp>
+#include <thread>
 #include <deque>
-#include <memory>
 #include <mutex>
-#include "../shared/protocol.h" // Include the shared message protocol
+#include "../shared/protocol.h"   // ✅ make sure this path is correct
 
 using boost::asio::ip::tcp;
+using boost::asio::ip::udp;
 
 class NetworkClient {
 public:
-    // Constructor: Initializes the client with an io_context.
-    NetworkClient(boost::asio::io_context& io_context);
+    explicit NetworkClient(boost::asio::io_context& io);
 
-    // Connects to the server at the specified host and port.
     void connect(const std::string& host, const std::string& port);
-
-    // Sends a game message to the server.
-    void send(const GameMessage& msg);
-
-    // Closes the connection to the server.
     void close();
 
-    // A thread-safe queue for incoming messages from the server.
-    // The main game loop will read from this queue.
-    std::deque<GameMessage> incoming_messages;
+    void send_tcp(const GameMessage& msg);
+    void send_udp(const UDPMessage& msg);
+
+    void set_id(uint32_t id) { my_id = id; }
+    uint32_t get_id() const { return my_id; }
+
+    // Queues for incoming messages
+    std::deque<GameMessage> incoming_tcp_messages;
+    std::deque<UDPMessage> incoming_udp_messages;
     std::mutex incoming_mutex;
 
 private:
-    // Starts the asynchronous read loop to listen for messages.
-    void do_read();
-
-    // Handles the asynchronous writing of messages from the outgoing queue.
+    void do_read_header();
+    void do_read_body(std::size_t body_length);
     void do_write();
 
-    boost::asio::io_context& io_context_;
-    tcp::socket socket_;
-    GameMessage read_msg_; // A buffer for a single incoming message
-    std::deque<GameMessage> write_msgs_; // A queue for outgoing messages
+    // UDP
+    void start_udp(const std::string& host);
+
+    boost::asio::io_context& io_context;
+    tcp::socket tcp_socket;
+    udp::socket udp_socket;
+    udp::endpoint server_udp_endpoint;
+
+    std::deque<GameMessage> write_msgs;
+    enum { header_length = sizeof(uint32_t) };
+    char read_msg_[2048];  // ✅ increased from 512 → 2048 for safety
+
+    uint32_t my_id = 0;
 };

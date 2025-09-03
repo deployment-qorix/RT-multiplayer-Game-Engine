@@ -117,17 +117,30 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named server
+# Target rules for targets named glad
 
 # Build rule for target.
-server: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 server
-.PHONY : server
+glad: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 glad
+.PHONY : glad
 
 # fast build rule for target.
-server/fast:
-	$(MAKE) $(MAKESILENT) -f server/CMakeFiles/server.dir/build.make server/CMakeFiles/server.dir/build
-.PHONY : server/fast
+glad/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/build
+.PHONY : glad/fast
+
+#=============================================================================
+# Target rules for targets named imgui
+
+# Build rule for target.
+imgui: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 imgui
+.PHONY : imgui
+
+# fast build rule for target.
+imgui/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/build
+.PHONY : imgui/fast
 
 #=============================================================================
 # Target rules for targets named client
@@ -139,21 +152,309 @@ client: cmake_check_build_system
 
 # fast build rule for target.
 client/fast:
-	$(MAKE) $(MAKESILENT) -f client/CMakeFiles/client.dir/build.make client/CMakeFiles/client.dir/build
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/build
 .PHONY : client/fast
 
 #=============================================================================
-# Target rules for targets named client3d
+# Target rules for targets named server
 
 # Build rule for target.
-client3d: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 client3d
-.PHONY : client3d
+server: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 server
+.PHONY : server
 
 # fast build rule for target.
-client3d/fast:
-	$(MAKE) $(MAKESILENT) -f client3d/CMakeFiles/client3d.dir/build.make client3d/CMakeFiles/client3d.dir/build
-.PHONY : client3d/fast
+server/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
+.PHONY : server/fast
+
+client3d/NetworkClient.o: client3d/NetworkClient.cpp.o
+.PHONY : client3d/NetworkClient.o
+
+# target to build an object file
+client3d/NetworkClient.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client3d/NetworkClient.cpp.o
+.PHONY : client3d/NetworkClient.cpp.o
+
+client3d/NetworkClient.i: client3d/NetworkClient.cpp.i
+.PHONY : client3d/NetworkClient.i
+
+# target to preprocess a source file
+client3d/NetworkClient.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client3d/NetworkClient.cpp.i
+.PHONY : client3d/NetworkClient.cpp.i
+
+client3d/NetworkClient.s: client3d/NetworkClient.cpp.s
+.PHONY : client3d/NetworkClient.s
+
+# target to generate assembly for a file
+client3d/NetworkClient.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client3d/NetworkClient.cpp.s
+.PHONY : client3d/NetworkClient.cpp.s
+
+client3d/main.o: client3d/main.cpp.o
+.PHONY : client3d/main.o
+
+# target to build an object file
+client3d/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client3d/main.cpp.o
+.PHONY : client3d/main.cpp.o
+
+client3d/main.i: client3d/main.cpp.i
+.PHONY : client3d/main.i
+
+# target to preprocess a source file
+client3d/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client3d/main.cpp.i
+.PHONY : client3d/main.cpp.i
+
+client3d/main.s: client3d/main.cpp.s
+.PHONY : client3d/main.s
+
+# target to generate assembly for a file
+client3d/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client3d/main.cpp.s
+.PHONY : client3d/main.cpp.s
+
+server/GameMap.o: server/GameMap.cpp.o
+.PHONY : server/GameMap.o
+
+# target to build an object file
+server/GameMap.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/GameMap.cpp.o
+.PHONY : server/GameMap.cpp.o
+
+server/GameMap.i: server/GameMap.cpp.i
+.PHONY : server/GameMap.i
+
+# target to preprocess a source file
+server/GameMap.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/GameMap.cpp.i
+.PHONY : server/GameMap.cpp.i
+
+server/GameMap.s: server/GameMap.cpp.s
+.PHONY : server/GameMap.s
+
+# target to generate assembly for a file
+server/GameMap.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/GameMap.cpp.s
+.PHONY : server/GameMap.cpp.s
+
+server/server.o: server/server.cpp.o
+.PHONY : server/server.o
+
+# target to build an object file
+server/server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/server.cpp.o
+.PHONY : server/server.cpp.o
+
+server/server.i: server/server.cpp.i
+.PHONY : server/server.i
+
+# target to preprocess a source file
+server/server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/server.cpp.i
+.PHONY : server/server.cpp.i
+
+server/server.s: server/server.cpp.s
+.PHONY : server/server.s
+
+# target to generate assembly for a file
+server/server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/server.cpp.s
+.PHONY : server/server.cpp.s
+
+vendor/glad/src/glad.o: vendor/glad/src/glad.c.o
+.PHONY : vendor/glad/src/glad.o
+
+# target to build an object file
+vendor/glad/src/glad.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/vendor/glad/src/glad.c.o
+.PHONY : vendor/glad/src/glad.c.o
+
+vendor/glad/src/glad.i: vendor/glad/src/glad.c.i
+.PHONY : vendor/glad/src/glad.i
+
+# target to preprocess a source file
+vendor/glad/src/glad.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/vendor/glad/src/glad.c.i
+.PHONY : vendor/glad/src/glad.c.i
+
+vendor/glad/src/glad.s: vendor/glad/src/glad.c.s
+.PHONY : vendor/glad/src/glad.s
+
+# target to generate assembly for a file
+vendor/glad/src/glad.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/vendor/glad/src/glad.c.s
+.PHONY : vendor/glad/src/glad.c.s
+
+vendor/imgui/backends/imgui_impl_glfw.o: vendor/imgui/backends/imgui_impl_glfw.cpp.o
+.PHONY : vendor/imgui/backends/imgui_impl_glfw.o
+
+# target to build an object file
+vendor/imgui/backends/imgui_impl_glfw.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/backends/imgui_impl_glfw.cpp.o
+.PHONY : vendor/imgui/backends/imgui_impl_glfw.cpp.o
+
+vendor/imgui/backends/imgui_impl_glfw.i: vendor/imgui/backends/imgui_impl_glfw.cpp.i
+.PHONY : vendor/imgui/backends/imgui_impl_glfw.i
+
+# target to preprocess a source file
+vendor/imgui/backends/imgui_impl_glfw.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/backends/imgui_impl_glfw.cpp.i
+.PHONY : vendor/imgui/backends/imgui_impl_glfw.cpp.i
+
+vendor/imgui/backends/imgui_impl_glfw.s: vendor/imgui/backends/imgui_impl_glfw.cpp.s
+.PHONY : vendor/imgui/backends/imgui_impl_glfw.s
+
+# target to generate assembly for a file
+vendor/imgui/backends/imgui_impl_glfw.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/backends/imgui_impl_glfw.cpp.s
+.PHONY : vendor/imgui/backends/imgui_impl_glfw.cpp.s
+
+vendor/imgui/backends/imgui_impl_opengl3.o: vendor/imgui/backends/imgui_impl_opengl3.cpp.o
+.PHONY : vendor/imgui/backends/imgui_impl_opengl3.o
+
+# target to build an object file
+vendor/imgui/backends/imgui_impl_opengl3.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/backends/imgui_impl_opengl3.cpp.o
+.PHONY : vendor/imgui/backends/imgui_impl_opengl3.cpp.o
+
+vendor/imgui/backends/imgui_impl_opengl3.i: vendor/imgui/backends/imgui_impl_opengl3.cpp.i
+.PHONY : vendor/imgui/backends/imgui_impl_opengl3.i
+
+# target to preprocess a source file
+vendor/imgui/backends/imgui_impl_opengl3.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/backends/imgui_impl_opengl3.cpp.i
+.PHONY : vendor/imgui/backends/imgui_impl_opengl3.cpp.i
+
+vendor/imgui/backends/imgui_impl_opengl3.s: vendor/imgui/backends/imgui_impl_opengl3.cpp.s
+.PHONY : vendor/imgui/backends/imgui_impl_opengl3.s
+
+# target to generate assembly for a file
+vendor/imgui/backends/imgui_impl_opengl3.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/backends/imgui_impl_opengl3.cpp.s
+.PHONY : vendor/imgui/backends/imgui_impl_opengl3.cpp.s
+
+vendor/imgui/imgui.o: vendor/imgui/imgui.cpp.o
+.PHONY : vendor/imgui/imgui.o
+
+# target to build an object file
+vendor/imgui/imgui.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui.cpp.o
+.PHONY : vendor/imgui/imgui.cpp.o
+
+vendor/imgui/imgui.i: vendor/imgui/imgui.cpp.i
+.PHONY : vendor/imgui/imgui.i
+
+# target to preprocess a source file
+vendor/imgui/imgui.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui.cpp.i
+.PHONY : vendor/imgui/imgui.cpp.i
+
+vendor/imgui/imgui.s: vendor/imgui/imgui.cpp.s
+.PHONY : vendor/imgui/imgui.s
+
+# target to generate assembly for a file
+vendor/imgui/imgui.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui.cpp.s
+.PHONY : vendor/imgui/imgui.cpp.s
+
+vendor/imgui/imgui_demo.o: vendor/imgui/imgui_demo.cpp.o
+.PHONY : vendor/imgui/imgui_demo.o
+
+# target to build an object file
+vendor/imgui/imgui_demo.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_demo.cpp.o
+.PHONY : vendor/imgui/imgui_demo.cpp.o
+
+vendor/imgui/imgui_demo.i: vendor/imgui/imgui_demo.cpp.i
+.PHONY : vendor/imgui/imgui_demo.i
+
+# target to preprocess a source file
+vendor/imgui/imgui_demo.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_demo.cpp.i
+.PHONY : vendor/imgui/imgui_demo.cpp.i
+
+vendor/imgui/imgui_demo.s: vendor/imgui/imgui_demo.cpp.s
+.PHONY : vendor/imgui/imgui_demo.s
+
+# target to generate assembly for a file
+vendor/imgui/imgui_demo.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_demo.cpp.s
+.PHONY : vendor/imgui/imgui_demo.cpp.s
+
+vendor/imgui/imgui_draw.o: vendor/imgui/imgui_draw.cpp.o
+.PHONY : vendor/imgui/imgui_draw.o
+
+# target to build an object file
+vendor/imgui/imgui_draw.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_draw.cpp.o
+.PHONY : vendor/imgui/imgui_draw.cpp.o
+
+vendor/imgui/imgui_draw.i: vendor/imgui/imgui_draw.cpp.i
+.PHONY : vendor/imgui/imgui_draw.i
+
+# target to preprocess a source file
+vendor/imgui/imgui_draw.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_draw.cpp.i
+.PHONY : vendor/imgui/imgui_draw.cpp.i
+
+vendor/imgui/imgui_draw.s: vendor/imgui/imgui_draw.cpp.s
+.PHONY : vendor/imgui/imgui_draw.s
+
+# target to generate assembly for a file
+vendor/imgui/imgui_draw.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_draw.cpp.s
+.PHONY : vendor/imgui/imgui_draw.cpp.s
+
+vendor/imgui/imgui_tables.o: vendor/imgui/imgui_tables.cpp.o
+.PHONY : vendor/imgui/imgui_tables.o
+
+# target to build an object file
+vendor/imgui/imgui_tables.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_tables.cpp.o
+.PHONY : vendor/imgui/imgui_tables.cpp.o
+
+vendor/imgui/imgui_tables.i: vendor/imgui/imgui_tables.cpp.i
+.PHONY : vendor/imgui/imgui_tables.i
+
+# target to preprocess a source file
+vendor/imgui/imgui_tables.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_tables.cpp.i
+.PHONY : vendor/imgui/imgui_tables.cpp.i
+
+vendor/imgui/imgui_tables.s: vendor/imgui/imgui_tables.cpp.s
+.PHONY : vendor/imgui/imgui_tables.s
+
+# target to generate assembly for a file
+vendor/imgui/imgui_tables.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_tables.cpp.s
+.PHONY : vendor/imgui/imgui_tables.cpp.s
+
+vendor/imgui/imgui_widgets.o: vendor/imgui/imgui_widgets.cpp.o
+.PHONY : vendor/imgui/imgui_widgets.o
+
+# target to build an object file
+vendor/imgui/imgui_widgets.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_widgets.cpp.o
+.PHONY : vendor/imgui/imgui_widgets.cpp.o
+
+vendor/imgui/imgui_widgets.i: vendor/imgui/imgui_widgets.cpp.i
+.PHONY : vendor/imgui/imgui_widgets.i
+
+# target to preprocess a source file
+vendor/imgui/imgui_widgets.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_widgets.cpp.i
+.PHONY : vendor/imgui/imgui_widgets.cpp.i
+
+vendor/imgui/imgui_widgets.s: vendor/imgui/imgui_widgets.cpp.s
+.PHONY : vendor/imgui/imgui_widgets.s
+
+# target to generate assembly for a file
+vendor/imgui/imgui_widgets.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/vendor/imgui/imgui_widgets.cpp.s
+.PHONY : vendor/imgui/imgui_widgets.cpp.s
 
 # Help Target
 help:
@@ -164,8 +465,45 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... client"
-	@echo "... client3d"
+	@echo "... glad"
+	@echo "... imgui"
 	@echo "... server"
+	@echo "... client3d/NetworkClient.o"
+	@echo "... client3d/NetworkClient.i"
+	@echo "... client3d/NetworkClient.s"
+	@echo "... client3d/main.o"
+	@echo "... client3d/main.i"
+	@echo "... client3d/main.s"
+	@echo "... server/GameMap.o"
+	@echo "... server/GameMap.i"
+	@echo "... server/GameMap.s"
+	@echo "... server/server.o"
+	@echo "... server/server.i"
+	@echo "... server/server.s"
+	@echo "... vendor/glad/src/glad.o"
+	@echo "... vendor/glad/src/glad.i"
+	@echo "... vendor/glad/src/glad.s"
+	@echo "... vendor/imgui/backends/imgui_impl_glfw.o"
+	@echo "... vendor/imgui/backends/imgui_impl_glfw.i"
+	@echo "... vendor/imgui/backends/imgui_impl_glfw.s"
+	@echo "... vendor/imgui/backends/imgui_impl_opengl3.o"
+	@echo "... vendor/imgui/backends/imgui_impl_opengl3.i"
+	@echo "... vendor/imgui/backends/imgui_impl_opengl3.s"
+	@echo "... vendor/imgui/imgui.o"
+	@echo "... vendor/imgui/imgui.i"
+	@echo "... vendor/imgui/imgui.s"
+	@echo "... vendor/imgui/imgui_demo.o"
+	@echo "... vendor/imgui/imgui_demo.i"
+	@echo "... vendor/imgui/imgui_demo.s"
+	@echo "... vendor/imgui/imgui_draw.o"
+	@echo "... vendor/imgui/imgui_draw.i"
+	@echo "... vendor/imgui/imgui_draw.s"
+	@echo "... vendor/imgui/imgui_tables.o"
+	@echo "... vendor/imgui/imgui_tables.i"
+	@echo "... vendor/imgui/imgui_tables.s"
+	@echo "... vendor/imgui/imgui_widgets.o"
+	@echo "... vendor/imgui/imgui_widgets.i"
+	@echo "... vendor/imgui/imgui_widgets.s"
 .PHONY : help
 
 

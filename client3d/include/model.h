@@ -44,6 +44,7 @@ private:
         string warn, err;
 
         if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str())) {
+// Requirements: QCSIDM_SRS_012, QCSIDM_SRS_087, QCSIDM_SRS_102, QCSIDM_SRS_111, QCSIDM_SRS_116, QCSIDM_SRS_196, QCSIDM_SRS_200
             throw std::runtime_error(warn + err);
         }
 
